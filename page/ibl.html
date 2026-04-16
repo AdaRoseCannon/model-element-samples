@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Model: IBL test</title>
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="../css/style.css" />
     <style>
       html {
         color: rgb(221, 221, 221);
@@ -39,20 +39,22 @@
       </p>
       <pre>
 &lt;model environmentmap="night.hdr" alt="a teapot in a dark environment"&gt;
-  &lt;source src="./teapot.usdz" type="model/vnd.usdz+zip" /&gt;
-  &lt;source src="./teapot.glb" type="model/gltf-binary" /&gt;
-  &lt;img src="./teapot-fallback-ibl.jpg" alt="An image of a model of a teapot lit by a dark environment"&gt;
+  &lt;source src="teapot.usdz" type="model/vnd.usdz+zip" /&gt;
+  &lt;source src="teapot.glb" type="model/gltf-binary" /&gt;
+  &lt;img src="teapot-fallback-ibl.jpg" alt="An image of a model of a teapot lit by a dark environment"&gt;
 &lt;/model&gt;
     </pre
       >
       <br />
       <h2>Result</h2>
 
-      <model environmentmap="night.hdr" alt="a teapot in a dark environment">
-        <source src="./teapot.usdz" type="model/vnd.usdz+zip" />
-        <source src="./teapot.glb" type="model/gltf-binary" />
+      <model
+        environmentmap="../assets/night.hdr"
+        alt="a teapot in a dark environment">
+        <source src="../assets/teapot.usdz" type="model/vnd.usdz+zip" />
+        <source src="../assets/teapot.glb" type="model/gltf-binary" />
         <img
-          src="./teapot-fallback-ibl.jpg"
+          src="../assets/teapot-fallback-ibl.jpg"
           alt="An image of a model of a teapot lit by a dark environment" />
       </model>
     </div>
