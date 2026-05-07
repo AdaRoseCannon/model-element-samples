@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Model: CSS filters</title>
+    <link rel="stylesheet" href="../css/style.css" />
+    <style>
+      /* reset model background color */
+      :root {
+        --bg-color: #000;
+      }
+
+      model {
+        background-color: var(--bg-color);
+      }
+
+      .filter-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 20px;
+      }
+
+      .filter-buttons button {
+        display: inline-block;
+        margin: 0;
+        padding: 8px 16px;
+        border: 2px solid #aaa;
+        border-radius: 6px;
+        background: #f0f0f0;
+        cursor: pointer;
+        font-size: 0.9rem;
+      }
+
+      .filter-buttons button.active {
+        border-color: #333;
+        background: #333;
+        color: #fff;
+      }
+
+      #active-filter {
+        font-family: monospace;
+        font-size: 0.9rem;
+        margin-bottom: 16px;
+        color: #555;
+      }
+
+      .model-container {
+        width: 400px;
+        height: 400px;
+        overflow: hidden;
+        background-color: var(--bg-color);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Model: CSS filters</h1>
+      <hr />
+      <p>Apply a CSS <code>filter</code> to the <code>&lt;model&gt;</code> element using the buttons below.</p>
+
+      <div class="filter-buttons">
+        <button type="button" data-filter="none" class="active">None</button>
+        <button type="button" data-filter="blur(8px)">Blur</button>
+        <button type="button" data-filter="sepia(100%)">Sepia</button>
+        <button type="button" data-filter="grayscale(100%)">Grayscale</button>
+        <button type="button" data-filter="invert(100%)">Invert</button>
+        <button type="button" data-filter="hue-rotate(180deg)">Hue rotate</button>
+        <button type="button" data-filter="opacity(30%)">Opacity</button>
+      </div>
+
+      <p id="active-filter">filter: none</p>
+
+      <div class="model-container">
+        <model alt="A model of a teapot" id="model">
+          <source src="../assets/teapot.usdz" type="model/vnd.usdz+zip" />
+          <source src="../assets/teapot.glb" type="model/gltf-binary" />
+          <img
+            src="../assets/teapot-fallback-black.jpg"
+            alt="An image of a model of a teapot" />
+        </model>
+      </div>
+    </div>
+
+    <script type="module">
+      const modelEl = document.getElementById('model');
+      const activeFilterEl = document.getElementById('active-filter');
+      const buttons = document.querySelectorAll('.filter-buttons button');
+
+      buttons.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const filter = btn.dataset.filter;
+          modelEl.style.filter = filter === 'none' ? '' : filter;
+          activeFilterEl.textContent = `filter: ${filter}`;
+          buttons.forEach((b) => b.classList.remove('active'));
+          btn.classList.add('active');
+        });
+      });
+
+      await modelEl.ready;
+      modelEl.currentTime = modelEl.duration * 0.5;
+    </script>
+  </body>
+</html>
