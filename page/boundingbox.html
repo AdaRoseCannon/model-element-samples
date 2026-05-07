@@ -30,6 +30,10 @@
     </div>
 
     <script type="module">
+      if (!window.HTMLModelElement) {
+        await import('../model-element-polyfill/model-element-polyfill.js');
+      }
+
       function writePoint(pt) {
         return `x: ${pt.x}, y: ${pt.y}, z: ${pt.z}`;
       }

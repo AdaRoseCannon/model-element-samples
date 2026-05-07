@@ -28,6 +28,9 @@
     </div>
 
     <script type="module">
+      if (!window.HTMLModelElement) {
+        await import('../model-element-polyfill/model-element-polyfill.js');
+      }
       let startDragX, startDragY, omegaX, omegaY;
 
       const VERTICAL_DRAG_FACTOR = 7;

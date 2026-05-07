@@ -42,7 +42,7 @@
         const modelSupport = 'HTMLModelElement' in window;
 
         const supportedMessage = 'Your browser supports the &lt;model&gt; element. You can view the samples below.';
-        const notSupportedMessage = 'Your browser does not support the &lt;model&gt; element. Please use a browser that supports the &lt;model&gt; element.';
+        const notSupportedMessage = 'Your browser does not support the &lt;model&gt; element. A polyfill will be used instead.';
 
         modelSupportStatus.innerHTML = modelSupport ? supportedMessage : notSupportedMessage;
         modelSupportStatus.classList.toggle('supported', modelSupport);

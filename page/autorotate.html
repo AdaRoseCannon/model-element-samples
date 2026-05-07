@@ -57,6 +57,10 @@ function update() {
     </div>
 
     <script type="module">
+      if (!window.HTMLModelElement) {
+        await import('../model-element-polyfill/model-element-polyfill.js');
+      }
+
       let initialTransform;
       const model = document.querySelector('model');
       await model.ready;

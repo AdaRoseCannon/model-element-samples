@@ -8,6 +8,11 @@
     <link rel="stylesheet" href="../css/style.css" />
   </head>
   <body>
+    <script type="module">
+      if (!window.HTMLModelElement) {
+        await import('../model-element-polyfill/model-element-polyfill.js');
+      }
+    </script>
     <div class="container">
       <h1>Model: Basic Blob URL test overriding type</h1>
       <hr />

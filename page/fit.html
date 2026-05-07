@@ -45,6 +45,11 @@
     </style>
   </head>
   <body>
+    <script type="module">
+      if (!window.HTMLModelElement) {
+        await import('../model-element-polyfill/model-element-polyfill.js');
+      }
+    </script>
     <div class="container">
       <h1>Model: Fit test</h1>
       <hr />
