@@ -8,6 +8,17 @@
     <link rel="stylesheet" href="../css/style.css" />
   </head>
   <body>
+    <script>
+      var on = new URLSearchParams(location.search).has('polyfill');
+      document.write(
+        '<a class="polyfill-toggle" href="' +
+        (on ? location.pathname : location.pathname + '?polyfill') + '">' +
+        '<span class="polyfill-toggle-label">Polyfill</span>' +
+        '<span class="polyfill-toggle-track"' + (on ? ' style="background:#34c759"' : '') + '>' +
+        '<span class="polyfill-toggle-knob"' + (on ? ' style="transform:translateX(16px)"' : '') + '></span>' +
+        '</span></a>'
+      );
+    </script>
     <div class="container">
       <h1>Model: auto-rotate test</h1>
       <hr />
@@ -57,10 +68,9 @@ function update() {
     </div>
 
     <script type="module">
-      if (!window.HTMLModelElement) {
+      if (new URLSearchParams(location.search).has('polyfill') && !window.HTMLModelElement) {
         await import('../model-element-polyfill/model-element-polyfill.js');
       }
-
       let initialTransform;
       const model = document.querySelector('model');
       await model.ready;

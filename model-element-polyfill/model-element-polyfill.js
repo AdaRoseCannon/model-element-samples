@@ -23496,12 +23496,11 @@ function WebGLMorphtargets(gl, capabilities, textures) {
     const morphTargetsCount = morphAttribute !== void 0 ? morphAttribute.length : 0;
     let entry = morphTextures.get(geometry);
     if (entry === void 0 || entry.count !== morphTargetsCount) {
-      let disposeTexture2 = function() {
+      let disposeTexture = function() {
         texture.dispose();
         morphTextures.delete(geometry);
-        geometry.removeEventListener("dispose", disposeTexture2);
+        geometry.removeEventListener("dispose", disposeTexture);
       };
-      var disposeTexture = disposeTexture2;
       if (entry !== void 0) entry.texture.dispose();
       const hasMorphPosition = geometry.morphAttributes.position !== void 0;
       const hasMorphNormals = geometry.morphAttributes.normal !== void 0;
@@ -23560,7 +23559,7 @@ function WebGLMorphtargets(gl, capabilities, textures) {
         size: new Vector2(width, height)
       };
       morphTextures.set(geometry, entry);
-      geometry.addEventListener("dispose", disposeTexture2);
+      geometry.addEventListener("dispose", disposeTexture);
     }
     if (object.isInstancedMesh === true && object.morphTexture !== null) {
       program.getUniforms().setValue(gl, "morphTexture", object.morphTexture, textures);
@@ -40089,8 +40088,63 @@ function updateEntityTransformFromOrbit(state, applyEntityTransform2) {
   state.entityTransform = buildTransformMatrix(scale, finalZ, state.orbitQuaternion, center);
   applyEntityTransform2();
 }
+function calculateFOVForViewport(cameraDistance) {
+  const viewportHeight = document.documentElement.clientHeight;
+  const viewportHeightCm = viewportHeight / CSS_PIXELS_PER_CM;
+  const viewportHeightMeters = viewportHeightCm / 100;
+  const halfFovRad = Math.atan(viewportHeightMeters / (2 * cameraDistance));
+  return 2 * halfFovRad * (180 / Math.PI);
+}
+function applyUnifiedViewOffset(element, camera) {
+  if (!camera) return;
+  const rect = element.getBoundingClientRect();
+  const fullWidth = document.documentElement.clientWidth;
+  const fullHeight = document.documentElement.clientHeight;
+  camera.setViewOffset(fullWidth, fullHeight, rect.left, rect.top, rect.width, rect.height);
+  camera.aspect = fullWidth / fullHeight;
+  camera.updateProjectionMatrix();
+}
+function getPortalCenter3D(element) {
+  const rect = element.getBoundingClientRect();
+  const viewportWidth = document.documentElement.clientWidth;
+  const viewportHeight = document.documentElement.clientHeight;
+  const viewportWidthM = viewportWidth / CSS_PIXELS_PER_CM / 100;
+  const viewportHeightM = viewportHeight / CSS_PIXELS_PER_CM / 100;
+  const portalCenterX_px = rect.left + rect.width / 2;
+  const portalCenterY_px = rect.top + rect.height / 2;
+  const x = portalCenterX_px / CSS_PIXELS_PER_CM / 100 - viewportWidthM / 2;
+  const y = viewportHeightM / 2 - portalCenterY_px / CSS_PIXELS_PER_CM / 100;
+  return { x, y };
+}
+function updateUnifiedTranslation(element, portalGroup) {
+  if (!portalGroup) return;
+  const portalCenter = getPortalCenter3D(element);
+  portalGroup.position.x = portalCenter.x;
+  portalGroup.position.y = portalCenter.y;
+}
+const DEFAULT_CAMERA_DISTANCE = 0.3;
+function parseConfig(url) {
+  const defaults = { cameraDistance: DEFAULT_CAMERA_DISTANCE, unifiedFrustum: false };
+  let params;
+  try {
+    params = new URL(url).searchParams;
+  } catch {
+    return defaults;
+  }
+  let cameraDistance = DEFAULT_CAMERA_DISTANCE;
+  if (params.has("camera-distance")) {
+    const raw = params.get("camera-distance");
+    const cm = Number(raw);
+    if (!Number.isNaN(cm) && cm > 0) {
+      cameraDistance = cm / 100;
+    }
+  }
+  const unifiedFrustum = params.has("unified-frustum");
+  return { cameraDistance, unifiedFrustum };
+}
+const config = Object.freeze(parseConfig(import.meta.url));
 const sharedHDRLoader = new HDRLoader();
-const CAMERA_DISTANCE = 0.5;
+const CAMERA_DISTANCE = config.cameraDistance;
 const _rendererSize = new Vector2();
 const spatialIntersectionObserver = new IntersectionObserver((entries) => {
   for (const entry of entries) {
@@ -40183,7 +40237,7 @@ function initSpatialContext(element, state) {
   state.scene.background = null;
   state.canvas.style.background = "Canvas";
   state.scene.environment = createDefaultEnvironmentMap();
-  const fov2 = calculateStandardFOV(element);
+  const fov2 = config.unifiedFrustum ? calculateFOVForViewport(CAMERA_DISTANCE) : calculateStandardFOV(element);
   state.camera = new PerspectiveCamera(fov2, width / height, CAMERA_DISTANCE * 0.5, 100 + CAMERA_DISTANCE);
   state.camera.position.set(0, 0, CAMERA_DISTANCE);
   state.resizeObserver = new ResizeObserver(() => handleSpatialResize(element, state));
@@ -40364,9 +40418,14 @@ function updateStandardCamera(element, state) {
   const width = element.clientWidth;
   const height = element.clientHeight;
   if (width === 0 || height === 0) return;
-  state.camera.aspect = width / height;
-  state.camera.fov = calculateStandardFOV(element);
-  state.camera.updateProjectionMatrix();
+  if (config.unifiedFrustum) {
+    state.camera.fov = calculateFOVForViewport(CAMERA_DISTANCE);
+    applyUnifiedViewOffset(element, state.camera);
+  } else {
+    state.camera.aspect = width / height;
+    state.camera.fov = calculateStandardFOV(element);
+    state.camera.updateProjectionMatrix();
+  }
 }
 function applyEntityTransform(element, state) {
   if (!state?.pivotGroup) return;
@@ -40410,6 +40469,8 @@ function renderAndBlit(element, state, renderer) {
   if (currentDevWidth !== width || currentDevHeight !== height) {
     renderer.setSize(cssWidth, cssHeight, false);
   }
+  if (config.unifiedFrustum) applyUnifiedViewOffset(element, state.camera);
+  if (config.unifiedFrustum) updateUnifiedTranslation(element, state.portalGroup);
   renderer.render(state.scene, state.camera);
   const srcWidth = renderer.domElement.width;
   const srcHeight = renderer.domElement.height;

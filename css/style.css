@@ -71,3 +71,53 @@ button {
 #model-support-status.supported {
   background-color: #adeaad;
 }
+
+.polyfill-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  background: none;
+  padding: 0;
+  margin: 10px 20px;
+  border-radius: 0;
+  float: right;
+}
+
+.polyfill-toggle-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #6e6e73;
+}
+
+.polyfill-toggle-track {
+  position: relative;
+  width: 42px;
+  height: 26px;
+  background: #e9e9eb;
+  border-radius: 13px;
+}
+
+.polyfill-toggle-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+@view-transition { navigation: auto; }
+.polyfill-toggle-track { view-transition-name: polyfill-track; }
+.polyfill-toggle-knob  { view-transition-name: polyfill-knob; }
+::view-transition-group(polyfill-knob),
+::view-transition-group(polyfill-track) {
+  animation-duration: 0.3s;
+  animation-timing-function: ease;
+}
+::view-transition-old(polyfill-knob),
+::view-transition-new(polyfill-knob) {
+  animation: none;
+}
