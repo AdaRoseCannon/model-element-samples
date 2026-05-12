@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Model: cube sides</title>
+    <link rel="stylesheet" href="../css/style.css" />
+    <style>
+      .cube-view-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 12px 0;
+      }
+
+      .cube-view-controls button {
+        display: inline-block;
+        margin: 0;
+        cursor: pointer;
+        border-radius: 8px;
+        border: 1px solid #bbb;
+        padding: 8px 14px;
+        background: #e8e8e8;
+      }
+
+      .cube-view-controls button.active {
+        background: #1a5fb4;
+        color: #fff;
+        border-color: #0d3d82;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Model: cube sides</h1>
+      <hr />
+      <p>
+        Use the buttons to set <code>entityTransform</code> so each labeled face points toward the camera.
+      </p>
+
+      <div class="cube-view-controls" id="cube-view-controls">
+        <button type="button" data-face="front">Front</button>
+        <button type="button" data-face="back">Back</button>
+        <button type="button" data-face="left">Left</button>
+        <button type="button" data-face="right">Right</button>
+        <button type="button" data-face="top">Top</button>
+        <button type="button" data-face="bottom">Bottom</button>
+      </div>
+
+      <model id="cube-sides-model" alt="A model of a cube with labeled sides">
+        <source src="../assets/cube-sides.usdz" type="model/vnd.usdz+zip" />
+        <source src="../assets/cube-sides.glb" type="model/gltf-binary" />
+        <img
+          src="../assets/cube-sides.jpg"
+          alt="An image of a cube with labeled sides" />
+      </model>
+    </div>
+
+    <script type="module">
+      const model = document.querySelector('#cube-sides-model');
+      const controls = document.querySelector('#cube-view-controls');
+
+      const faceRotations = {
+        front: [0, 0, 0],
+        back: [0, 180, 0],
+        left: [0, 90, 0],
+        right: [0, -90, 0],
+        top: [90, 0, 0],
+        bottom: [-90, 0, 0],
+      };
+
+      const DURATION_MS = 500;
+
+      let currentAngles = [...faceRotations.front];
+
+      let rafId = null;
+      let animStartTime = 0;
+      let animFrom = null;
+      let animDeltas = null;
+      let animTargetFace = null;
+
+      function easeInOutCubic(t) {
+        return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+      }
+
+      function shortestAngleDelta(fromDeg, toDeg) {
+        return ((((toDeg - fromDeg + 360+180) % 360) + 360) % 360) - 180;
+      }
+
+      function applyAngles(rx, ry, rz) {
+        model.entityTransform = base.rotate(rx, ry, rz);
+      }
+
+      function setActiveFace(face) {
+        for (const btn of controls.querySelectorAll('button[data-face]')) {
+          btn.classList.toggle('active', btn.dataset.face === face);
+        }
+      }
+
+      function stopAndSampleCurrent() {
+        if (rafId === null) return;
+        const now = performance.now();
+        const u = Math.min(1, (now - animStartTime) / DURATION_MS);
+        const e = easeInOutCubic(u);
+        currentAngles = animFrom.map((a, i) => a + animDeltas[i] * e);
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+
+      function goToFace(face) {
+        stopAndSampleCurrent();
+        setActiveFace(face);
+
+        const target = faceRotations[face];
+        animFrom = [...currentAngles];
+        animDeltas = [
+          shortestAngleDelta(animFrom[0], target[0]),
+          shortestAngleDelta(animFrom[1], target[1]),
+          shortestAngleDelta(animFrom[2], target[2]),
+        ];
+        if (animDeltas.every((d) => Math.abs(d) < 1e-6)) {
+          currentAngles = [...target];
+          applyAngles(...currentAngles);
+          return;
+        }
+        animTargetFace = face;
+        animStartTime = performance.now();
+
+        function frame(now) {
+          const u = Math.min(1, (now - animStartTime) / DURATION_MS);
+          const e = easeInOutCubic(u);
+          const rx = animFrom[0] + animDeltas[0] * e;
+          const ry = animFrom[1] + animDeltas[1] * e;
+          const rz = animFrom[2] + animDeltas[2] * e;
+          applyAngles(rx, ry, rz);
+
+          if (u < 1) {
+            rafId = requestAnimationFrame(frame);
+          } else {
+            rafId = null;
+            currentAngles = [...faceRotations[animTargetFace]];
+          }
+        }
+
+        rafId = requestAnimationFrame(frame);
+      }
+
+      await model.ready;
+      const base = model.entityTransform.translate(0, 0, -0.1);
+
+      applyAngles(...currentAngles);
+      setActiveFace('front');
+
+      controls.addEventListener('click', (e) => {
+        const btn = e.target.closest('button[data-face]');
+        if (!btn) return;
+        goToFace(btn.dataset.face);
+      });
+    </script>
+  </body>
+</html>
